@@ -25,8 +25,8 @@ data Clause
 
 data Type
     = Record (List (String × Type))
-    | Text
-    | UUID
+    | SinglePrecision
+    | DoublePrecision
 
 derive instance genericStatement  :: Generic Statement
 derive instance genericExpression :: Generic Expression
