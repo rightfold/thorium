@@ -20,7 +20,7 @@ type
     / doubleKeyword precisionKeyword
         { return S.DoublePrecision.value; }
 
-identifier = _ name:$([a-zA-Z_][a-zA-Z0-9_]*) _ { return name; }
+identifier = _ name:$([a-zA-Z_][a-zA-Z0-9_]*) _ { return name.toLowerCase(); }
 
 createKeyword    = _ "CREATE"i _
 doubleKeyword    = _ "DOUBLE"i _
