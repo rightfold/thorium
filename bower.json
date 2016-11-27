@@ -3,6 +3,14 @@
   "dependencies": {
     "purescript-prelude": "^2.1.0",
     "purescript-lists": "^3.2.1",
-    "purescript-tuples": "^3.0.0"
+    "purescript-tuples": "^3.0.0",
+    "purescript-eff": "^2.0.0",
+    "purescript-st": "^2.0.0",
+    "purescript-maps": "^2.0.1",
+    "purescript-maybe": "^2.0.1",
+    "purescript-generics": "^3.1.0"
+  },
+  "devDependencies": {
+    "purescript-spec": "^0.10.0"
   }
 }
