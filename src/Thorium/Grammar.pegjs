@@ -2,6 +2,8 @@
 var S = require('../Thorium.Syntax');
 }
 
+statements = statement*
+
 statement
     = createInputStream
     / createOutputStream

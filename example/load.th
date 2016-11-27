@@ -1,0 +1,2 @@
+CREATE INPUT STREAM in double precision;
+CREATE OUTPUT STREAM out double precision;
