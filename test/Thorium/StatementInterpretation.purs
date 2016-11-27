@@ -6,7 +6,7 @@ import Data.Generic (gEq)
 import Data.StrMap.ST as STStrMap
 import Test.Spec (describe, it)
 import Test.Spec.Assertions (fail)
-import Thorium.Environment (Environment(..))
+import Thorium.Environment (newEnvironment)
 import Thorium.Prelude
 import Thorium.StatementInterpretation
 import Thorium.Syntax (Statement(..), Type(..))
@@ -14,7 +14,7 @@ import Thorium.Syntax (Statement(..), Type(..))
 spec = do
     describe "interpretStatement" do
         it "CreateInputStream" do
-            environment <- liftEff $ Environment <$> STStrMap.new <*> STStrMap.new
+            environment <- liftEff newEnvironment
             error <- liftEff $ interpretStatement (CreateInputStream "foo" SinglePrecision) environment
             error `gShouldEqual` Nothing
             error <- liftEff $ interpretStatement (CreateInputStream "foo" DoublePrecision) environment
@@ -22,7 +22,7 @@ spec = do
             error <- liftEff $ interpretStatement (CreateInputStream "foo" DoublePrecision) environment
             error `gShouldEqual` Just (InputStreamAlreadyExists "foo" SinglePrecision)
         it "CreateOutputStream" do
-            environment <- liftEff $ Environment <$> STStrMap.new <*> STStrMap.new
+            environment <- liftEff newEnvironment
             error <- liftEff $ interpretStatement (CreateOutputStream "foo" SinglePrecision) environment
             error `gShouldEqual` Nothing
             error <- liftEff $ interpretStatement (CreateOutputStream "foo" DoublePrecision) environment
@@ -30,7 +30,7 @@ spec = do
             error <- liftEff $ interpretStatement (CreateOutputStream "foo" DoublePrecision) environment
             error `gShouldEqual` Just (OutputStreamAlreadyExists "foo" SinglePrecision)
         it "CreateInputStream and CreateOutputStream" do
-            environment <- liftEff $ Environment <$> STStrMap.new <*> STStrMap.new
+            environment <- liftEff newEnvironment
             error <- liftEff $ interpretStatement (CreateInputStream "foo" SinglePrecision) environment
             error `gShouldEqual` Nothing
             error <- liftEff $ interpretStatement (CreateOutputStream "foo" SinglePrecision) environment
