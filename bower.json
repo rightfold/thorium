@@ -1,0 +1,8 @@
+{
+  "name": "thorium",
+  "dependencies": {
+    "purescript-prelude": "^2.1.0",
+    "purescript-lists": "^3.2.1",
+    "purescript-tuples": "^3.0.0"
+  }
+}
