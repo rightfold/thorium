@@ -1,7 +1,7 @@
 'use strict';
 
 var Data_Maybe = require('../Data.Maybe');
-var grammar = require('../Thorium.Grammar/foreign');
+var grammar = require('../Thorium.Parse.Grammar/foreign');
 
 function parser(rule) {
     return function(text) {
