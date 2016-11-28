@@ -1,2 +1,6 @@
 CREATE INPUT STREAM in double precision;
 CREATE OUTPUT STREAM out double precision;
+CREATE REACTOR load_warnings AS
+    FROM in
+    DISTINCT WITHIN PERIOD timeout
+    SELECT INTO INPUT STREAM out;
