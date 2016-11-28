@@ -11,11 +11,10 @@ import Thorium.Prelude
 data Statement
     = CreateInputStream String Type
     | CreateOutputStream String Type
-    | CreateReactor String Expression
+    | CreateReactor String (List Clause)
 
 data Expression
     = Variable String
-    | ClauseList (List Clause)
 
 data Clause
     = From String String
