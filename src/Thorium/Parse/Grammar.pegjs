@@ -31,26 +31,18 @@ expression
 clause
     = fromKeyword name:identifier as:(asKeyword as:identifier { return as; })?
         { return new S.From(name, as === null ? name : as); }
-    / distinctKeyword value:expression? within:(withinKeyword w:( n:expression elementsKeyword { return ['e', n]; }
-                                                                / periodKeyword n:expression { return ['p', n]; }
-                                                                ) { return w; })?
-        {
-            var withinNode;
-            if (within === null) {
-                withinNode = S.Infinity.value;
-            } else if (within[0] === 'e') {
-                withinNode = new S.Elements(within[1]);
-            } else if (within[0] === 'p') {
-                withinNode = new S.Period(within[1]);
-            }
-            return new S.Distinct(value === null ? Data_Maybe.Nothing.value : new Data_Maybe.Just(value), withinNode);
-        }
+    / distinctKeyword value:expression !withinKeyword
+        { return new S.Distinct(value, S.Infinity.value); }
+    / distinctKeyword value:expression withinKeyword n:expression elementsKeyword
+        { return new S.Distinct(value, new S.Elements(n)); }
+    / distinctKeyword value:expression withinKeyword periodKeyword n:expression
+        { return new S.Distinct(value, new S.Period(n)); }
     / whereKeyword condition:expression
         { return new S.Where(condition); }
-    / selectKeyword value:expression? intoKeyword inputKeyword streamKeyword name:identifier
-        { return new S.SelectIntoInputStream(value === null ? Data_Maybe.Nothing.value : new Data_Maybe.Just(value), name) }
-    / selectKeyword value:expression? intoKeyword outputKeyword streamKeyword name:identifier
-        { return new S.SelectIntoOutputStream(value === null ? Data_Maybe.Nothing.value : new Data_Maybe.Just(value), name) }
+    / selectKeyword value:expression intoKeyword inputKeyword streamKeyword name:identifier
+        { return new S.SelectIntoInputStream(value, name) }
+    / selectKeyword value:expression intoKeyword outputKeyword streamKeyword name:identifier
+        { return new S.SelectIntoOutputStream(value, name) }
 
 type
     = singleKeyword precisionKeyword

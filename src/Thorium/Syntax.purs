@@ -19,10 +19,10 @@ data Expression
 
 data Clause
     = From String String
-    | Distinct (Maybe Expression) Within
+    | Distinct Expression Within
     | Where Expression
-    | SelectIntoInputStream (Maybe Expression) String
-    | SelectIntoOutputStream (Maybe Expression) String
+    | SelectIntoInputStream Expression String
+    | SelectIntoOutputStream Expression String
 
 data Within = Infinity | Elements Expression | Period Expression
 
