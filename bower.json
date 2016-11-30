@@ -14,7 +14,10 @@
     "purescript-node-process": "^3.0.0",
     "purescript-console": "^2.0.0",
     "purescript-exceptions": "^2.0.0",
-    "purescript-foldable-traversable": "^2.0.0"
+    "purescript-foldable-traversable": "^2.0.0",
+    "purescript-transformers": "^2.0.2",
+    "purescript-bifunctors": "^2.0.0",
+    "purescript-sets": "^2.0.0"
   },
   "devDependencies": {
     "purescript-spec": "^0.10.0"
