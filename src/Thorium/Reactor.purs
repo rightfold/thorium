@@ -11,6 +11,7 @@ import Control.Monad.ST (ST, modifySTRef, newSTRef, readSTRef)
 import Control.Monad.Writer.Class as Writer
 import Control.Monad.Writer.Trans (runWriterT, WriterT)
 import Data.Bifunctor (rmap)
+import Data.Generic (class Generic, gShow)
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Set as Set
@@ -24,12 +25,15 @@ data ReactorOutput
     = IntoInputStream String Value
     | IntoOutputStream String Value
 
+derive instance genericReactorOutput :: Generic ReactorOutput
+instance showReactorOutput :: Show ReactorOutput where show = gShow
+
 runReactor
     :: ∀ region eff a
-     . String × Value
-    -> Reactor region eff a
+     . Reactor region eff a
+    -> String × Value
     -> Eff (st :: ST region | eff) (a × List ReactorOutput)
-runReactor message action =
+runReactor action message =
     runWriterT $ runReaderT action (message /\ Map.empty)
 
 compileReactor
