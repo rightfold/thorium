@@ -97,7 +97,6 @@ typeCheckReactor (ScanIntoOutputStream initial subsequent outputStream : subsequ
             | valueType == outputStreamType -> typeCheckReactor subsequentClauses
             | otherwise -> throwError $ IncompatibleType valueType outputStreamType
 
-
 typeCheckExpression :: ∀ region eff. Expression -> TypeCheck region eff Type
 typeCheckExpression (Variable name) =
     Reader.asks (_.variables >>> Map.lookup name) >>= case _ of
