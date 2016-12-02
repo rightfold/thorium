@@ -35,7 +35,7 @@ runTypeCheck
     :: ∀ region eff a
      . TypeCheck region eff a
     -> Environment region eff
-    -> Eff (st :: ST region | eff) (Either TypeError a)
+    -> Eff (st :: ST region | eff) (TypeError + a)
 runTypeCheck action env = runExceptT (runReaderT action (env /\ Map.empty))
 
 typeCheckReactor :: ∀ region eff. List Clause -> TypeCheck region eff Unit

@@ -9,6 +9,7 @@ module Thorium.Prelude
 , module Data.Traversable
 , module Prelude
 , type (×)
+, type (+)
 ) where
 
 import Control.Monad.Eff (Eff)
@@ -22,3 +23,4 @@ import Data.Tuple.Nested ((/\))
 import Prelude
 
 infixr 7 type Tuple as ×
+infixr 6 type Either as +
