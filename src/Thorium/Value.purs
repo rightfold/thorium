@@ -6,7 +6,8 @@ import Data.Generic (class Generic, gShow)
 import Thorium.Prelude
 
 data Value
-    = Boolean Boolean
+    = ShouldNotOccur
+    | Boolean Boolean
 
 derive instance genericValue :: Generic Value
 instance showValue :: Show Value where show = gShow

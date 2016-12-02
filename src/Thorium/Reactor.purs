@@ -97,6 +97,6 @@ compileReactor (ScanIntoOutputStream initial subsequent outputStream : subsequen
 
 evaluate :: ∀ region eff. Expression -> Reactor region eff Value
 evaluate (Variable name) =
-    Reader.asks (fromMaybe (Boolean false) <<< Map.lookup name <<< _.variables)
+    Reader.asks (fromMaybe ShouldNotOccur <<< Map.lookup name <<< _.variables)
 evaluate Accumulator =
-    fromMaybe (Boolean false) <$> Reader.asks _.accumulator
+    fromMaybe ShouldNotOccur <$> Reader.asks _.accumulator
