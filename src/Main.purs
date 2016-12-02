@@ -27,7 +27,7 @@ boot bootFilePath =
     readTextFile UTF8 bootFilePath <#> parseStatements >>= case _ of
         Just statements -> runST do
             environment@(Environment _ _ reactors) <- newEnvironment
-            traverse_ (interpretStatement `flip` environment) statements
+            logShow =<< traverse (interpretStatement `flip` environment) statements
             STStrMap.peek reactors "load_warnings" >>= case _ of
                 Just reactor -> do
                     logShow =<< runReactor reactor ("a" /\ Boolean true)

@@ -28,6 +28,7 @@ data Within = Infinity | Elements Expression | Period Expression
 
 data Type
     = Record (List (String × Type))
+    | Boolean
     | SinglePrecision
     | DoublePrecision
 
@@ -42,3 +43,5 @@ instance showExpression :: Show Expression where show = gShow
 instance showClause     :: Show Clause     where show = gShow
 instance showWithin     :: Show Within     where show = gShow
 instance showType       :: Show Type       where show = gShow
+
+derive instance eqType :: Eq Type

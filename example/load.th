@@ -3,4 +3,4 @@ CREATE OUTPUT STREAM out double precision;
 CREATE REACTOR load_warnings AS
     FROM in
     DISTINCT in WITHIN PERIOD timeout
-    SELECT in INTO INPUT STREAM out;
+    SELECT in INTO OUTPUT STREAM out;
