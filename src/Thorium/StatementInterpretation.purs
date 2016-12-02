@@ -21,21 +21,21 @@ data StatementInterpretationError
 derive instance genericStatementInterpretationError :: Generic StatementInterpretationError
 instance showStatementInterpretationError :: Show StatementInterpretationError where show = gShow
 
-interpretStatement :: ∀ region eff. Statement -> Environment region eff -> Eff (st :: ST region | eff) (Maybe StatementInterpretationError)
+interpretStatement :: ∀ region eff. Statement -> Environment region eff -> Eff (st :: ST region | eff) (StatementInterpretationError + Unit)
 interpretStatement (CreateInputStream name type_) (Environment inputStreams _ _) =
     STStrMap.peek inputStreams name >>= case _ of
-        Nothing -> STStrMap.poke inputStreams name type_ $> Nothing
-        Just existing -> pure $ Just $ InputStreamAlreadyExists name existing
+        Nothing -> STStrMap.poke inputStreams name type_ $> Right unit
+        Just existing -> pure $ Left $ InputStreamAlreadyExists name existing
 interpretStatement (CreateOutputStream name type_) (Environment _ outputStreams _) =
     STStrMap.peek outputStreams name >>= case _ of
-        Nothing -> STStrMap.poke outputStreams name type_ $> Nothing
-        Just existing -> pure $ Just $ OutputStreamAlreadyExists name existing
+        Nothing -> STStrMap.poke outputStreams name type_ $> Right unit
+        Just existing -> pure $ Left $ OutputStreamAlreadyExists name existing
 interpretStatement (CreateReactor name implementation) environment@(Environment _ _ reactors) =
     STStrMap.peek reactors name >>= case _ of
         Nothing -> do
             runTypeCheck (typeCheckReactor implementation) environment >>= case _ of
                 Right _ -> do
                     compileReactor implementation >>= STStrMap.poke reactors name
-                    pure Nothing
-                Left typeError -> pure $ Just $ TypeErrorInReactor typeError
-        Just _ -> pure $ Just $ ReactorAlreadyExists name
+                    pure $ Right unit
+                Left typeError -> pure $ Left $ TypeErrorInReactor typeError
+        Just _ -> pure $ Left $ ReactorAlreadyExists name
