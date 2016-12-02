@@ -6,5 +6,5 @@ module Thorium.Parse
 import Thorium.Prelude
 import Thorium.Syntax (Statement)
 
-foreign import parseStatements :: String -> Maybe (Array Statement)
-foreign import parseStatement :: String -> Maybe Statement
+foreign import parseStatements :: String -> Either String (Array Statement)
+foreign import parseStatement :: String -> Either String Statement

@@ -25,7 +25,7 @@ main = argv >>= case _ of
 boot :: ∀ eff. String -> Eff (console :: CONSOLE, err :: EXCEPTION, fs :: FS | eff) Unit
 boot bootFilePath =
     readTextFile UTF8 bootFilePath <#> parseStatements >>= case _ of
-        Just statements -> runST do
+        Right statements -> runST do
             environment@(Environment _ _ reactors) <- newEnvironment
             logShow =<< traverse (interpretStatement `flip` environment) statements
             STStrMap.peek reactors "load_warnings" >>= case _ of
@@ -39,4 +39,4 @@ boot bootFilePath =
                     logShow =<< runReactor reactor ("out" /\ Boolean true)
                     logShow =<< runReactor reactor ("out" /\ Boolean false)
                 Nothing -> pure unit
-        Nothing -> log "parse error in boot file"
+        Left error -> log $ "parse error in boot file: " <> error

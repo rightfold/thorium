@@ -1,14 +1,14 @@
 'use strict';
 
-var Data_Maybe = require('../Data.Maybe');
+var Data_Either = require('../Data.Either');
 var grammar = require('../Thorium.Parse.Grammar/foreign');
 
 function parser(rule) {
     return function(text) {
         try {
-            return new Data_Maybe.Just(grammar.parse(text, {startRule: rule}));
+            return new Data_Either.Right(grammar.parse(text, {startRule: rule}));
         } catch (e) {
-            return Data_Maybe.Nothing.value;
+            return new Data_Either.Left('' + e);
         }
     };
 }

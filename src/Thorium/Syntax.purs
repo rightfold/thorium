@@ -16,6 +16,7 @@ data Statement
 
 data Expression
     = Variable String
+    | Accumulator
 
 data Clause
     = From String String
@@ -23,6 +24,8 @@ data Clause
     | Where Expression
     | SelectIntoInputStream Expression String
     | SelectIntoOutputStream Expression String
+    | ScanIntoInputStream Expression Expression String
+    | ScanIntoOutputStream Expression Expression String
 
 data Within = Infinity | Elements Expression | Period Expression
 

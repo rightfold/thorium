@@ -18,7 +18,7 @@ import Data.Either (Either(..))
 import Data.List ((:), List(Nil))
 import Data.Maybe (fromMaybe, Maybe(..))
 import Data.Traversable (traverse)
-import Data.Tuple (fst, snd, Tuple)
+import Data.Tuple (Tuple)
 import Data.Tuple.Nested ((/\))
 import Prelude
 
