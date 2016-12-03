@@ -12,6 +12,7 @@ import Control.Monad.Reader.Class as Reader
 import Control.Monad.Reader.Trans (ReaderT, runReaderT)
 import Control.Monad.ST (ST)
 import Data.Generic (class Generic, gShow)
+import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
 import Data.StrMap.ST as STStrMap
@@ -20,7 +21,8 @@ import Thorium.Prelude
 import Thorium.Syntax (Clause(..), Expression(..), Type(..))
 
 data TypeError
-    = UnknownSource String
+    = FromInMiddle
+    | UnknownSource String
     | UnknownSink String
     | UnknownVariable String
     | IncompatibleType Type Type
@@ -45,29 +47,41 @@ runTypeCheck action environment =
     runExceptT $ runReaderT action {environment, variables: Map.empty, accumulator: Nothing}
 
 typeCheckReactor :: ∀ region eff. List Clause -> TypeCheck region eff Unit
-typeCheckReactor Nil = pure unit
-typeCheckReactor (From source name : subsequentClauses) = do
+typeCheckReactor clauses = typeCheckFroms clauses *> typeCheckClauses clauses
+
+typeCheckFroms :: ∀ region eff. List Clause -> TypeCheck region eff Unit
+typeCheckFroms =
+    List.dropWhile isFrom
+    >>> any isFrom
+    >>> when `flip` throwError FromInMiddle
+    where
+    isFrom (From _ _) = true
+    isFrom _ = false
+
+typeCheckClauses :: ∀ region eff. List Clause -> TypeCheck region eff Unit
+typeCheckClauses Nil = pure unit
+typeCheckClauses (From source name : subsequentClauses) = do
     Environment pipes _ <- Reader.asks _.environment
     liftEff (STStrMap.peek pipes source) >>= case _ of
         Nothing -> throwError $ UnknownSource source
         Just type_ ->
             Reader.local (\s -> s {variables = Map.insert name type_ s.variables}) $
-                typeCheckReactor subsequentClauses
-typeCheckReactor (Distinct part _ : subsequentClauses) =
-    typeCheckExpression part *> typeCheckReactor subsequentClauses
-typeCheckReactor (Where condition : subsequentClauses) =
+                typeCheckClauses subsequentClauses
+typeCheckClauses (Distinct part _ : subsequentClauses) =
+    typeCheckExpression part *> typeCheckClauses subsequentClauses
+typeCheckClauses (Where condition : subsequentClauses) =
     typeCheckExpression condition >>= case _ of
-        Boolean -> typeCheckReactor subsequentClauses
+        Boolean -> typeCheckClauses subsequentClauses
         type_ -> throwError $ IncompatibleType type_ Boolean
-typeCheckReactor (Select value sink : subsequentClauses) = do
+typeCheckClauses (Select value sink : subsequentClauses) = do
     valueType <- typeCheckExpression value
     Environment pipes _ <- Reader.asks _.environment
     liftEff (STStrMap.peek pipes sink) >>= case _ of
         Nothing -> throwError $ UnknownSink sink
         Just sinkType
-            | valueType == sinkType -> typeCheckReactor subsequentClauses
+            | valueType == sinkType -> typeCheckClauses subsequentClauses
             | otherwise -> throwError $ IncompatibleType valueType sinkType
-typeCheckReactor (Scan initial subsequent sink : subsequentClauses) = do
+typeCheckClauses (Scan initial subsequent sink : subsequentClauses) = do
     accumulatorType <- typeCheckExpression initial
     valueType <- Reader.local (_ {accumulator = Just accumulatorType}) $
         typeCheckExpression subsequent
@@ -75,7 +89,7 @@ typeCheckReactor (Scan initial subsequent sink : subsequentClauses) = do
     liftEff (STStrMap.peek pipes sink) >>= case _ of
         Nothing -> throwError $ UnknownSink sink
         Just sinkType
-            | valueType == sinkType -> typeCheckReactor subsequentClauses
+            | valueType == sinkType -> typeCheckClauses subsequentClauses
             | otherwise -> throwError $ IncompatibleType valueType sinkType
 
 typeCheckExpression :: ∀ region eff. Expression -> TypeCheck region eff Type
