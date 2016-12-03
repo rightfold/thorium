@@ -26,7 +26,7 @@ boot :: ∀ eff. String -> Eff (console :: CONSOLE, err :: EXCEPTION, fs :: FS |
 boot bootFilePath =
     readTextFile UTF8 bootFilePath <#> parseStatements >>= case _ of
         Right statements -> runST do
-            environment@(Environment _ _ reactors) <- newEnvironment
+            environment@(Environment _ reactors) <- newEnvironment
             logShow =<< traverse (interpretStatement `flip` environment) statements
             STStrMap.peek reactors "load_warnings" >>= case _ of
                 Just reactor -> do

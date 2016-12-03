@@ -8,17 +8,12 @@ var Data_Foldable = require('../Data.Foldable');
 statements = statement*
 
 statement
-    = createInputStream
-    / createOutputStream
+    = createStream
     / createReactor
 
-createInputStream
-    = createKeyword inputKeyword streamKeyword name:identifier type:type semicolon
-        { return new S.CreateInputStream(name, type); }
-
-createOutputStream
-    = createKeyword outputKeyword streamKeyword name:identifier type:type semicolon
-        { return new S.CreateOutputStream(name, type); }
+createStream
+    = createKeyword streamKeyword name:identifier type:type semicolon
+        { return new S.CreateStream(name, type); }
 
 createReactor
     = createKeyword reactorKeyword name:identifier asKeyword clauses:clause* semicolon
@@ -41,14 +36,10 @@ clause
         { return new S.Distinct(value, new S.Period(n)); }
     / whereKeyword condition:expression
         { return new S.Where(condition); }
-    / selectKeyword value:expression intoKeyword inputKeyword streamKeyword name:identifier
-        { return new S.SelectIntoInputStream(value, name) }
-    / selectKeyword value:expression intoKeyword outputKeyword streamKeyword name:identifier
-        { return new S.SelectIntoOutputStream(value, name) }
-    / scanKeyword initialKeyword initial:expression subsequentKeyword subsequent:expression intoKeyword inputKeyword streamKeyword name:identifier
-        { return new S.ScanIntoInputStream(initial, subsequent, name) }
-    / scanKeyword initialKeyword initial:expression subsequentKeyword subsequent:expression intoKeyword outputKeyword streamKeyword name:identifier
-        { return new S.ScanIntoOutputStream(initial, subsequent, name) }
+    / selectKeyword value:expression intoKeyword name:identifier
+        { return new S.Select(value, name) }
+    / scanKeyword initialKeyword initial:expression subsequentKeyword subsequent:expression intoKeyword name:identifier
+        { return new S.Scan(initial, subsequent, name) }
 
 type
     = singleKeyword precisionKeyword
@@ -67,9 +58,7 @@ reserved
     / "ELEMENTS"i
     / "FROM"i
     / "INITIAL"i
-    / "INPUT"i
     / "INTO"i
-    / "OUTPUT"i
     / "PERIOD"i
     / "PRECISION"i
     / "REACTOR"i
@@ -89,9 +78,7 @@ doubleKeyword      = _ "DOUBLE"i _
 elementsKeyword    = _ "ELEMENTS"i _
 fromKeyword        = _ "FROM"i _
 initialKeyword     = _ "INITIAL"i _
-inputKeyword       = _ "INPUT"i _
 intoKeyword        = _ "INTO"i _
-outputKeyword      = _ "OUTPUT"i _
 periodKeyword      = _ "PERIOD"i _
 precisionKeyword   = _ "PRECISION"i _
 reactorKeyword     = _ "REACTOR"i _

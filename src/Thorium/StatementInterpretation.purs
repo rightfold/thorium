@@ -13,8 +13,7 @@ import Thorium.Syntax (Statement(..), Type)
 import Thorium.TypeCheck (runTypeCheck, typeCheckReactor, TypeError)
 
 data StatementInterpretationError
-    = InputStreamAlreadyExists String Type
-    | OutputStreamAlreadyExists String Type
+    = StreamAlreadyExists String Type
     | ReactorAlreadyExists String
     | TypeErrorInReactor TypeError
 
@@ -22,15 +21,11 @@ derive instance genericStatementInterpretationError :: Generic StatementInterpre
 instance showStatementInterpretationError :: Show StatementInterpretationError where show = gShow
 
 interpretStatement :: ∀ region eff. Statement -> Environment region eff -> Eff (st :: ST region | eff) (StatementInterpretationError + Unit)
-interpretStatement (CreateInputStream name type_) (Environment inputStreams _ _) =
-    STStrMap.peek inputStreams name >>= case _ of
-        Nothing -> STStrMap.poke inputStreams name type_ $> Right unit
-        Just existing -> pure $ Left $ InputStreamAlreadyExists name existing
-interpretStatement (CreateOutputStream name type_) (Environment _ outputStreams _) =
-    STStrMap.peek outputStreams name >>= case _ of
-        Nothing -> STStrMap.poke outputStreams name type_ $> Right unit
-        Just existing -> pure $ Left $ OutputStreamAlreadyExists name existing
-interpretStatement (CreateReactor name implementation) environment@(Environment _ _ reactors) =
+interpretStatement (CreateStream name type_) (Environment streams _) =
+    STStrMap.peek streams name >>= case _ of
+        Nothing -> STStrMap.poke streams name type_ $> Right unit
+        Just existing -> pure $ Left $ StreamAlreadyExists name existing
+interpretStatement (CreateReactor name implementation) environment@(Environment _ reactors) =
     STStrMap.peek reactors name >>= case _ of
         Nothing -> do
             runTypeCheck (typeCheckReactor implementation) environment >>= case _ of

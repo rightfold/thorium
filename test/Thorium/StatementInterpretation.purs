@@ -13,28 +13,14 @@ import Thorium.Syntax (Statement(..), Type(..))
 
 spec = do
     describe "interpretStatement" do
-        it "CreateInputStream" do
+        it "CreateStream" do
             environment <- liftEff newEnvironment
-            error <- liftEff $ interpretStatement (CreateInputStream "foo" SinglePrecision) environment
+            error <- liftEff $ interpretStatement (CreateStream "foo" SinglePrecision) environment
             error `gShouldEqual` Right unit
-            error <- liftEff $ interpretStatement (CreateInputStream "foo" DoublePrecision) environment
-            error `gShouldEqual` Left (InputStreamAlreadyExists "foo" SinglePrecision)
-            error <- liftEff $ interpretStatement (CreateInputStream "foo" DoublePrecision) environment
-            error `gShouldEqual` Left (InputStreamAlreadyExists "foo" SinglePrecision)
-        it "CreateOutputStream" do
-            environment <- liftEff newEnvironment
-            error <- liftEff $ interpretStatement (CreateOutputStream "foo" SinglePrecision) environment
-            error `gShouldEqual` Right unit
-            error <- liftEff $ interpretStatement (CreateOutputStream "foo" DoublePrecision) environment
-            error `gShouldEqual` Left (OutputStreamAlreadyExists "foo" SinglePrecision)
-            error <- liftEff $ interpretStatement (CreateOutputStream "foo" DoublePrecision) environment
-            error `gShouldEqual` Left (OutputStreamAlreadyExists "foo" SinglePrecision)
-        it "CreateInputStream and CreateOutputStream" do
-            environment <- liftEff newEnvironment
-            error <- liftEff $ interpretStatement (CreateInputStream "foo" SinglePrecision) environment
-            error `gShouldEqual` Right unit
-            error <- liftEff $ interpretStatement (CreateOutputStream "foo" SinglePrecision) environment
-            error `gShouldEqual` Right unit
+            error <- liftEff $ interpretStatement (CreateStream "foo" DoublePrecision) environment
+            error `gShouldEqual` Left (StreamAlreadyExists "foo" SinglePrecision)
+            error <- liftEff $ interpretStatement (CreateStream "foo" DoublePrecision) environment
+            error `gShouldEqual` Left (StreamAlreadyExists "foo" SinglePrecision)
 
 gShouldEqual v1 v2 =
     when (not (v1 `gEq` v2)) $

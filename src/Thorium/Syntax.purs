@@ -10,8 +10,7 @@ import Data.Generic (class Generic, gShow)
 import Thorium.Prelude
 
 data Statement
-    = CreateInputStream String Type
-    | CreateOutputStream String Type
+    = CreateStream String Type
     | CreateReactor String (List Clause)
 
 data Expression
@@ -22,10 +21,8 @@ data Clause
     = From String String
     | Distinct Expression Within
     | Where Expression
-    | SelectIntoInputStream Expression String
-    | SelectIntoOutputStream Expression String
-    | ScanIntoInputStream Expression Expression String
-    | ScanIntoOutputStream Expression Expression String
+    | Select Expression String
+    | Scan Expression Expression String
 
 data Within = Infinity | Elements Expression | Period Expression
 

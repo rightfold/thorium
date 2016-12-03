@@ -1,7 +1,7 @@
-CREATE INPUT STREAM in double precision;
-CREATE OUTPUT STREAM out double precision;
+CREATE STREAM in double precision;
+CREATE STREAM out double precision;
 CREATE REACTOR load_warnings AS
     FROM in
     DISTINCT in WITHIN PERIOD timeout
-    SELECT in INTO OUTPUT STREAM out
-    SCAN INITIAL in SUBSEQUENT ACCUMULATOR INTO OUTPUT STREAM out;
+    SELECT in INTO out
+    SCAN INITIAL in SUBSEQUENT ACCUMULATOR INTO out;

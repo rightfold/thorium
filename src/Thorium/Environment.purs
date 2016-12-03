@@ -10,7 +10,7 @@ import Thorium.Prelude
 import Thorium.Reactor (Reactor)
 import Thorium.Syntax (Type)
 
-data Environment region eff = Environment (STStrMap region Type) (STStrMap region Type) (STStrMap region (Reactor region eff Unit))
+data Environment region eff = Environment (STStrMap region Type) (STStrMap region (Reactor region eff Unit))
 
 newEnvironment :: ∀ region eff reff. Eff (st :: ST region | eff) (Environment region reff)
-newEnvironment = Environment <$> STStrMap.new <*> STStrMap.new <*> STStrMap.new
+newEnvironment = Environment <$> STStrMap.new <*> STStrMap.new

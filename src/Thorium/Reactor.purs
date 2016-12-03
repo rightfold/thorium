@@ -1,6 +1,6 @@
 module Thorium.Reactor
 ( Reactor
-, ReactorOutput(..)
+, ReactorOutput
 , runReactor
 , compileReactor
 ) where
@@ -10,8 +10,7 @@ import Control.Monad.Reader.Trans (ReaderT, runReaderT)
 import Control.Monad.ST (ST, modifySTRef, newSTRef, readSTRef, writeSTRef)
 import Control.Monad.Writer.Class as Writer
 import Control.Monad.Writer.Trans (runWriterT, WriterT)
-import Data.Bifunctor (rmap)
-import Data.Generic (class Generic, gShow)
+import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Set as Set
@@ -26,12 +25,7 @@ type Reactor region eff =
             }
             (WriterT (List ReactorOutput) (Eff (st :: ST region | eff)))
 
-data ReactorOutput
-    = IntoInputStream String Value
-    | IntoOutputStream String Value
-
-derive instance genericReactorOutput :: Generic ReactorOutput
-instance showReactorOutput :: Show ReactorOutput where show = gShow
+type ReactorOutput = String × Value
 
 runReactor
     :: ∀ region eff a
@@ -46,10 +40,10 @@ compileReactor
      . List Clause
     -> Eff (st :: ST region | eff) (Reactor region reff Unit)
 compileReactor Nil = pure (pure unit)
-compileReactor (From fromInputStream asName : subsequentClauses) =
+compileReactor (From fromStream asName : subsequentClauses) =
     compileReactor subsequentClauses <#> \subsequentReactor -> do
-        (actualInputStream /\ value) <- Reader.asks _.message
-        when (fromInputStream == actualInputStream) $
+        (actualStream /\ value) <- Reader.asks _.message
+        when (fromStream == actualStream) $
             Reader.local (\s -> s {variables = Map.insert asName value s.variables}) subsequentReactor
 compileReactor (Distinct onPart _ : subsequentClauses) = do
     recentValues <- newSTRef Set.empty
@@ -64,17 +58,12 @@ compileReactor (Where condition : subsequentClauses) =
         evaluate condition
         <#> (_ == Boolean true)
         >>= when `flip` subsequentReactor
-compileReactor (SelectIntoInputStream expression inputStream : subsequentClauses) =
+compileReactor (Select expression stream : subsequentClauses) =
     compileReactor subsequentClauses <#> \subsequentReactor -> do
         value <- evaluate expression
-        Writer.tell (IntoInputStream inputStream value : Nil)
+        Writer.tell (List.singleton $ stream /\ value)
         subsequentReactor
-compileReactor (SelectIntoOutputStream expression outputStream : subsequentClauses) =
-    compileReactor subsequentClauses <#> \subsequentReactor -> do
-        value <- evaluate expression
-        Writer.tell (IntoOutputStream outputStream value : Nil)
-        subsequentReactor
-compileReactor (ScanIntoInputStream initial subsequent inputStream : subsequentClauses) = do
+compileReactor (Scan initial subsequent stream : subsequentClauses) = do
     ref <- newSTRef Nothing
     compileReactor subsequentClauses <#> \subsequentReactor -> do
         value <- liftEff (readSTRef ref) >>= case _ of
@@ -83,17 +72,7 @@ compileReactor (ScanIntoInputStream initial subsequent inputStream : subsequentC
                 Reader.local (_ {accumulator = Just accumulator}) $
                     evaluate subsequent
         liftEff $ writeSTRef ref (Just value)
-        Writer.tell (IntoInputStream inputStream value : Nil)
-compileReactor (ScanIntoOutputStream initial subsequent outputStream : subsequentClauses) = do
-    ref <- newSTRef Nothing
-    compileReactor subsequentClauses <#> \subsequentReactor -> do
-        value <- liftEff (readSTRef ref) >>= case _ of
-            Nothing -> evaluate initial
-            Just accumulator ->
-                Reader.local (_ {accumulator = Just accumulator}) $
-                    evaluate subsequent
-        liftEff $ writeSTRef ref (Just value)
-        Writer.tell (IntoOutputStream outputStream value : Nil)
+        Writer.tell (List.singleton $ stream /\ value)
 
 evaluate :: ∀ region eff. Expression -> Reactor region eff Value
 evaluate (Variable name) =
