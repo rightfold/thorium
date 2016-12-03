@@ -1,5 +1,5 @@
-CREATE STREAM in double precision;
-CREATE STREAM out double precision;
+CREATE PIPE in double precision;
+CREATE PIPE out double precision;
 CREATE REACTOR load_warnings AS
     FROM in
     DISTINCT in WITHIN PERIOD timeout

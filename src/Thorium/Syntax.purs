@@ -10,7 +10,7 @@ import Data.Generic (class Generic, gShow)
 import Thorium.Prelude
 
 data Statement
-    = CreateStream String Type
+    = CreatePipe String Type
     | CreateReactor String (List Clause)
 
 data Expression

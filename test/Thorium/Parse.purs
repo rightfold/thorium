@@ -11,9 +11,9 @@ import Thorium.Syntax (Statement(..), Type(..))
 
 spec = do
     describe "parseStatement" do
-        it "CreateStream" do
-            let result = parseStatement "CREATE STREAM load SINGLE PRECISION;"
-            result `gShouldEqual` Right (CreateStream "load" SinglePrecision)
+        it "CreatePipe" do
+            let result = parseStatement "CREATE PIPE load SINGLE PRECISION;"
+            result `gShouldEqual` Right (CreatePipe "load" SinglePrecision)
 
 gShouldEqual v1 v2 =
     when (not (v1 `gEq` v2)) $

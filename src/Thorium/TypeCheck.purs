@@ -20,7 +20,8 @@ import Thorium.Prelude
 import Thorium.Syntax (Clause(..), Expression(..), Type(..))
 
 data TypeError
-    = UnknownStream String
+    = UnknownSource String
+    | UnknownSink String
     | UnknownVariable String
     | IncompatibleType Type Type
     | AccumulatorOutsideScan
@@ -45,10 +46,10 @@ runTypeCheck action environment =
 
 typeCheckReactor :: ∀ region eff. List Clause -> TypeCheck region eff Unit
 typeCheckReactor Nil = pure unit
-typeCheckReactor (From stream name : subsequentClauses) = do
-    Environment streams _ <- Reader.asks _.environment
-    liftEff (STStrMap.peek streams stream) >>= case _ of
-        Nothing -> throwError $ UnknownStream stream
+typeCheckReactor (From source name : subsequentClauses) = do
+    Environment pipes _ <- Reader.asks _.environment
+    liftEff (STStrMap.peek pipes source) >>= case _ of
+        Nothing -> throwError $ UnknownSource source
         Just type_ ->
             Reader.local (\s -> s {variables = Map.insert name type_ s.variables}) $
                 typeCheckReactor subsequentClauses
@@ -58,24 +59,24 @@ typeCheckReactor (Where condition : subsequentClauses) =
     typeCheckExpression condition >>= case _ of
         Boolean -> typeCheckReactor subsequentClauses
         type_ -> throwError $ IncompatibleType type_ Boolean
-typeCheckReactor (Select value stream : subsequentClauses) = do
+typeCheckReactor (Select value sink : subsequentClauses) = do
     valueType <- typeCheckExpression value
-    Environment streams _ <- Reader.asks _.environment
-    liftEff (STStrMap.peek streams stream) >>= case _ of
-        Nothing -> throwError $ UnknownStream stream
-        Just streamType
-            | valueType == streamType -> typeCheckReactor subsequentClauses
-            | otherwise -> throwError $ IncompatibleType valueType streamType
-typeCheckReactor (Scan initial subsequent stream : subsequentClauses) = do
+    Environment pipes _ <- Reader.asks _.environment
+    liftEff (STStrMap.peek pipes sink) >>= case _ of
+        Nothing -> throwError $ UnknownSink sink
+        Just sinkType
+            | valueType == sinkType -> typeCheckReactor subsequentClauses
+            | otherwise -> throwError $ IncompatibleType valueType sinkType
+typeCheckReactor (Scan initial subsequent sink : subsequentClauses) = do
     accumulatorType <- typeCheckExpression initial
     valueType <- Reader.local (_ {accumulator = Just accumulatorType}) $
         typeCheckExpression subsequent
-    Environment streams _ <- Reader.asks _.environment
-    liftEff (STStrMap.peek streams stream) >>= case _ of
-        Nothing -> throwError $ UnknownStream stream
-        Just streamType
-            | valueType == streamType -> typeCheckReactor subsequentClauses
-            | otherwise -> throwError $ IncompatibleType valueType streamType
+    Environment pipes _ <- Reader.asks _.environment
+    liftEff (STStrMap.peek pipes sink) >>= case _ of
+        Nothing -> throwError $ UnknownSink sink
+        Just sinkType
+            | valueType == sinkType -> typeCheckReactor subsequentClauses
+            | otherwise -> throwError $ IncompatibleType valueType sinkType
 
 typeCheckExpression :: ∀ region eff. Expression -> TypeCheck region eff Type
 typeCheckExpression (Variable name) =

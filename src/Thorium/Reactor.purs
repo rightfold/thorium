@@ -40,10 +40,10 @@ compileReactor
      . List Clause
     -> Eff (st :: ST region | eff) (Reactor region reff Unit)
 compileReactor Nil = pure (pure unit)
-compileReactor (From fromStream asName : subsequentClauses) =
+compileReactor (From fromSource asName : subsequentClauses) =
     compileReactor subsequentClauses <#> \subsequentReactor -> do
-        (actualStream /\ value) <- Reader.asks _.message
-        when (fromStream == actualStream) $
+        (actualSource /\ value) <- Reader.asks _.message
+        when (fromSource == actualSource) $
             Reader.local (\s -> s {variables = Map.insert asName value s.variables}) subsequentReactor
 compileReactor (Distinct onPart _ : subsequentClauses) = do
     recentValues <- newSTRef Set.empty
@@ -58,12 +58,12 @@ compileReactor (Where condition : subsequentClauses) =
         evaluate condition
         <#> (_ == Boolean true)
         >>= when `flip` subsequentReactor
-compileReactor (Select expression stream : subsequentClauses) =
+compileReactor (Select expression sink : subsequentClauses) =
     compileReactor subsequentClauses <#> \subsequentReactor -> do
         value <- evaluate expression
-        Writer.tell (List.singleton $ stream /\ value)
+        Writer.tell (List.singleton $ sink /\ value)
         subsequentReactor
-compileReactor (Scan initial subsequent stream : subsequentClauses) = do
+compileReactor (Scan initial subsequent sink : subsequentClauses) = do
     ref <- newSTRef Nothing
     compileReactor subsequentClauses <#> \subsequentReactor -> do
         value <- liftEff (readSTRef ref) >>= case _ of
@@ -72,7 +72,7 @@ compileReactor (Scan initial subsequent stream : subsequentClauses) = do
                 Reader.local (_ {accumulator = Just accumulator}) $
                     evaluate subsequent
         liftEff $ writeSTRef ref (Just value)
-        Writer.tell (List.singleton $ stream /\ value)
+        Writer.tell (List.singleton $ sink /\ value)
 
 evaluate :: ∀ region eff. Expression -> Reactor region eff Value
 evaluate (Variable name) =

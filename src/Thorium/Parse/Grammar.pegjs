@@ -8,12 +8,12 @@ var Data_Foldable = require('../Data.Foldable');
 statements = statement*
 
 statement
-    = createStream
+    = createPipe
     / createReactor
 
-createStream
-    = createKeyword streamKeyword name:identifier type:type semicolon
-        { return new S.CreateStream(name, type); }
+createPipe
+    = createKeyword pipeKeyword name:identifier type:type semicolon
+        { return new S.CreatePipe(name, type); }
 
 createReactor
     = createKeyword reactorKeyword name:identifier asKeyword clauses:clause* semicolon
@@ -60,12 +60,12 @@ reserved
     / "INITIAL"i
     / "INTO"i
     / "PERIOD"i
+    / "PIPE"i
     / "PRECISION"i
     / "REACTOR"i
     / "SCAN"i
     / "SELECT"i
     / "SINGLE"i
-    / "STREAM"i
     / "SUBSEQUENT"i
     / "WHERE"i
     / "WITHIN"i
@@ -80,12 +80,12 @@ fromKeyword        = _ "FROM"i _
 initialKeyword     = _ "INITIAL"i _
 intoKeyword        = _ "INTO"i _
 periodKeyword      = _ "PERIOD"i _
+pipeKeyword        = _ "PIPE"i _
 precisionKeyword   = _ "PRECISION"i _
 reactorKeyword     = _ "REACTOR"i _
 scanKeyword        = _ "SCAN"i _
 selectKeyword      = _ "SELECT"i _
 singleKeyword      = _ "SINGLE"i _
-streamKeyword      = _ "STREAM"i _
 subsequentKeyword  = _ "SUBSEQUENT"i _
 whereKeyword       = _ "WHERE"i _
 withinKeyword      = _ "WITHIN"i _

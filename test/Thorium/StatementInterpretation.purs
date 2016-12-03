@@ -13,14 +13,14 @@ import Thorium.Syntax (Statement(..), Type(..))
 
 spec = do
     describe "interpretStatement" do
-        it "CreateStream" do
+        it "CreatePipe" do
             environment <- liftEff newEnvironment
-            error <- liftEff $ interpretStatement (CreateStream "foo" SinglePrecision) environment
+            error <- liftEff $ interpretStatement (CreatePipe "foo" SinglePrecision) environment
             error `gShouldEqual` Right unit
-            error <- liftEff $ interpretStatement (CreateStream "foo" DoublePrecision) environment
-            error `gShouldEqual` Left (StreamAlreadyExists "foo" SinglePrecision)
-            error <- liftEff $ interpretStatement (CreateStream "foo" DoublePrecision) environment
-            error `gShouldEqual` Left (StreamAlreadyExists "foo" SinglePrecision)
+            error <- liftEff $ interpretStatement (CreatePipe "foo" DoublePrecision) environment
+            error `gShouldEqual` Left (PipeAlreadyExists "foo" SinglePrecision)
+            error <- liftEff $ interpretStatement (CreatePipe "foo" DoublePrecision) environment
+            error `gShouldEqual` Left (PipeAlreadyExists "foo" SinglePrecision)
 
 gShouldEqual v1 v2 =
     when (not (v1 `gEq` v2)) $
