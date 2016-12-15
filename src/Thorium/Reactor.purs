@@ -15,7 +15,7 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Set as Set
 import Thorium.Prelude
-import Thorium.Syntax (Clause(..), Expression(..))
+import Thorium.Syntax (Clause(..), Expression(..), From(..))
 import Thorium.Value (Value(..))
 
 type Reactor region eff =
@@ -37,35 +37,49 @@ runReactor action message =
 
 compileReactor
     :: ∀ region eff reff
-     . List Clause
+     . List From
+    -> List Clause
     -> Eff (st :: ST region | eff) (Reactor region reff Unit)
-compileReactor Nil = pure (pure unit)
-compileReactor (From fromSource asName : subsequentClauses) =
-    compileReactor subsequentClauses <#> \subsequentReactor -> do
+compileReactor froms clauses = compileFroms froms $ compileClauses clauses
+
+compileFroms
+    :: ∀ region eff reff
+     . List From
+    -> Eff (st :: ST region | eff) (Reactor region reff Unit)
+    -> Eff (st :: ST region | eff) (Reactor region reff Unit)
+compileFroms Nil next = next
+compileFroms (From fromSource asName : subsequentFroms) next =
+    compileFroms subsequentFroms next <#> \subsequentReactor -> do
         (actualSource /\ value) <- Reader.asks _.message
         when (fromSource == actualSource) $
             Reader.local (\s -> s {variables = Map.insert asName value s.variables}) subsequentReactor
-compileReactor (Distinct onPart _ : subsequentClauses) = do
+
+compileClauses
+    :: ∀ region eff reff
+     . List Clause
+    -> Eff (st :: ST region | eff) (Reactor region reff Unit)
+compileClauses Nil = pure (pure unit)
+compileClauses (Distinct onPart _ : subsequentClauses) = do
     recentValues <- newSTRef Set.empty
-    compileReactor subsequentClauses <#> \subsequentReactor -> do
+    compileClauses subsequentClauses <#> \subsequentReactor -> do
         part <- evaluate onPart
         distinct <- not <<< Set.member part <$> liftEff (readSTRef recentValues)
         when distinct $
             liftEff (modifySTRef recentValues (Set.insert part))
             *> subsequentReactor
-compileReactor (Where condition : subsequentClauses) =
-    compileReactor subsequentClauses <#> \subsequentReactor ->
+compileClauses (Where condition : subsequentClauses) =
+    compileClauses subsequentClauses <#> \subsequentReactor ->
         evaluate condition
         <#> (_ == Boolean true)
         >>= when `flip` subsequentReactor
-compileReactor (Select expression sink : subsequentClauses) =
-    compileReactor subsequentClauses <#> \subsequentReactor -> do
+compileClauses (Select expression sink : subsequentClauses) =
+    compileClauses subsequentClauses <#> \subsequentReactor -> do
         value <- evaluate expression
         Writer.tell (List.singleton $ sink /\ value)
         subsequentReactor
-compileReactor (Scan initial subsequent sink : subsequentClauses) = do
+compileClauses (Scan initial subsequent sink : subsequentClauses) = do
     ref <- newSTRef Nothing
-    compileReactor subsequentClauses <#> \subsequentReactor -> do
+    compileClauses subsequentClauses <#> \subsequentReactor -> do
         value <- liftEff (readSTRef ref) >>= case _ of
             Nothing -> evaluate initial
             Just accumulator ->

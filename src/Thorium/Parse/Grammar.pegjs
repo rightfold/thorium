@@ -16,8 +16,8 @@ createPipe
         { return new S.CreatePipe(name, type); }
 
 createReactor
-    = createKeyword reactorKeyword name:identifier asKeyword clauses:clause* semicolon
-        { return new S.CreateReactor(name, Data_List.fromFoldable(Data_Foldable.foldableArray)(clauses)); }
+    = createKeyword reactorKeyword name:identifier asKeyword froms:from* clauses:clause* semicolon
+        { return new S.CreateReactor(name, Data_List.fromFoldable(Data_Foldable.foldableArray)(froms), Data_List.fromFoldable(Data_Foldable.foldableArray)(clauses)); }
 
 expression
     = name:identifier
@@ -25,10 +25,12 @@ expression
     / accumulatorKeyword
         { return S.Accumulator.value; }
 
-clause
+from
     = fromKeyword name:identifier as:(asKeyword as:identifier { return as; })?
         { return new S.From(name, as === null ? name : as); }
-    / distinctKeyword value:expression !withinKeyword
+
+clause
+    = distinctKeyword value:expression !withinKeyword
         { return new S.Distinct(value, S.Infinity.value); }
     / distinctKeyword value:expression withinKeyword n:expression elementsKeyword
         { return new S.Distinct(value, new S.Elements(n)); }

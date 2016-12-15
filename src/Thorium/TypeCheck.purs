@@ -18,11 +18,10 @@ import Data.Map as Map
 import Data.StrMap.ST as STStrMap
 import Thorium.Environment (Environment(..))
 import Thorium.Prelude
-import Thorium.Syntax (Clause(..), Expression(..), Type(..))
+import Thorium.Syntax (Clause(..), Expression(..), From(..), Type(..))
 
 data TypeError
-    = FromInMiddle
-    | UnknownSource String
+    = UnknownSource String
     | UnknownSink String
     | UnknownVariable String
     | IncompatibleType Type Type
@@ -46,27 +45,21 @@ runTypeCheck
 runTypeCheck action environment =
     runExceptT $ runReaderT action {environment, variables: Map.empty, accumulator: Nothing}
 
-typeCheckReactor :: ∀ region eff. List Clause -> TypeCheck region eff Unit
-typeCheckReactor clauses = typeCheckFroms clauses *> typeCheckClauses clauses
+typeCheckReactor :: ∀ region eff. List From -> List Clause -> TypeCheck region eff Unit
+typeCheckReactor froms clauses = typeCheckFroms froms $ typeCheckClauses clauses
 
-typeCheckFroms :: ∀ region eff. List Clause -> TypeCheck region eff Unit
-typeCheckFroms =
-    List.dropWhile isFrom
-    >>> any isFrom
-    >>> when `flip` throwError FromInMiddle
-    where
-    isFrom (From _ _) = true
-    isFrom _ = false
-
-typeCheckClauses :: ∀ region eff. List Clause -> TypeCheck region eff Unit
-typeCheckClauses Nil = pure unit
-typeCheckClauses (From source name : subsequentClauses) = do
+typeCheckFroms :: ∀ region eff. List From -> TypeCheck region eff Unit -> TypeCheck region eff Unit
+typeCheckFroms Nil next = next
+typeCheckFroms (From source name : subsequentFroms) next = do
     Environment pipes _ <- Reader.asks _.environment
     liftEff (STStrMap.peek pipes source) >>= case _ of
         Nothing -> throwError $ UnknownSource source
         Just type_ ->
             Reader.local (\s -> s {variables = Map.insert name type_ s.variables}) $
-                typeCheckClauses subsequentClauses
+                typeCheckFroms subsequentFroms next
+
+typeCheckClauses :: ∀ region eff. List Clause -> TypeCheck region eff Unit
+typeCheckClauses Nil = pure unit
 typeCheckClauses (Distinct part _ : subsequentClauses) =
     typeCheckExpression part *> typeCheckClauses subsequentClauses
 typeCheckClauses (Where condition : subsequentClauses) =

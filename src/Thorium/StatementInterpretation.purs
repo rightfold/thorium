@@ -25,12 +25,12 @@ interpretStatement (CreatePipe name type_) (Environment pipes _) =
     STStrMap.peek pipes name >>= case _ of
         Nothing -> STStrMap.poke pipes name type_ $> Right unit
         Just existing -> pure $ Left $ PipeAlreadyExists name existing
-interpretStatement (CreateReactor name implementation) environment@(Environment _ reactors) =
+interpretStatement (CreateReactor name froms clauses) environment@(Environment _ reactors) =
     STStrMap.peek reactors name >>= case _ of
         Nothing -> do
-            runTypeCheck (typeCheckReactor implementation) environment >>= case _ of
+            runTypeCheck (typeCheckReactor froms clauses) environment >>= case _ of
                 Right _ -> do
-                    compileReactor implementation >>= STStrMap.poke reactors name
+                    compileReactor froms clauses >>= STStrMap.poke reactors name
                     pure $ Right unit
                 Left typeError -> pure $ Left $ TypeErrorInReactor typeError
         Just _ -> pure $ Left $ ReactorAlreadyExists name
